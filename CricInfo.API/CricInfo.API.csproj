@@ -14,4 +14,9 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CricInfo.Application\CricInfo.Application.csproj" />
+    <ProjectReference Include="..\CricInfo.Infrastructure\CricInfo.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
