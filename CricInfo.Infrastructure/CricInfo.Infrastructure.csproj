@@ -15,4 +15,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CricInfo.Application\CricInfo.Application.csproj" />
+    <ProjectReference Include="..\CricInfo.Domain\CricInfo.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
