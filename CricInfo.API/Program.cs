@@ -30,22 +30,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<
     IPointsTableService,
     PointsTableService>();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAngularDev", policy =>
-    {
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
-
-
-
 var app = builder.Build();
-app.UseCors("AllowAngularDev");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
