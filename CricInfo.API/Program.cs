@@ -20,8 +20,22 @@ builder.Services.AddAutoMapper(typeof(CompletedMappingProfile).Assembly);
 builder.Services.AddScoped<
     IPointsTableService,
     PointsTableService>();
-var app = builder.Build();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularDev", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+
+
+
+var app = builder.Build();
+app.UseCors("AllowAngularDev");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
