@@ -14,6 +14,15 @@ public class CompletedController : ControllerBase
         _completedService = completedService;
     }
 
+    // GET: api/completed
+    [HttpGet]
+    public async Task<IActionResult> GetCompletedMatches()
+    {
+        var result = await _completedService.GetCompletedMatchesAsync();
+        return Ok(result);
+    }
+
+    // GET: api/completed/1
     [HttpGet("{matchNo}")]
     public async Task<IActionResult> GetCompletedMatch(int matchNo)
     {

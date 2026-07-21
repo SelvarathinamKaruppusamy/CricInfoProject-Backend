@@ -17,6 +17,16 @@ builder.Services.AddDbContext<CricDbContext>(options =>
 builder.Services.AddInfrastructure();
 builder.Services.AddAutoMapper(typeof(ILiveService).Assembly);
 builder.Services.AddAutoMapper(typeof(CompletedMappingProfile).Assembly);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddScoped<
     IPointsTableService,
     PointsTableService>();
@@ -29,6 +39,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AngularPolicy");
 
 app.UseAuthorization();
 
