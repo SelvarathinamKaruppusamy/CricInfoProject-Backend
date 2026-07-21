@@ -3,6 +3,7 @@
 public class BattingResponseDto
 {
     public int id { get; set; }
+    public int playerId { get; set; }
 
     public string? name { get; set; }
 
