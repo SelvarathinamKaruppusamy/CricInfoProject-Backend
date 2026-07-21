@@ -5,4 +5,5 @@ namespace CricInfo.Application.Interfaces.Services.CompletedModule;
 public interface ICompletedService
 {
     Task<CompletedMatchResponseDto?> GetCompletedMatchAsync(int matchNo);
+    Task<List<CompletedMatchResponseDto>> GetCompletedMatchesAsync();
 }
