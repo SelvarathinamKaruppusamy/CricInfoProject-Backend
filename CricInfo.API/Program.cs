@@ -1,4 +1,5 @@
 using CricInfo.Application.Interfaces.Services.LiveModule;
+using CricInfo.Application.Mapping.CompletedModule;
 using CricInfo.Infrastructure;
 using CricInfo.Infrastructure.presistence;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ builder.Services.AddDbContext<CricDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultString")));
 builder.Services.AddInfrastructure();
 builder.Services.AddAutoMapper(typeof(ILiveService).Assembly);
+builder.Services.AddAutoMapper(typeof(CompletedMappingProfile).Assembly);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
