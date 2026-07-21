@@ -1,5 +1,7 @@
 using CricInfo.Application.Interfaces.Services.LiveModule;
+using CricInfo.Application.Interfaces.Services.PointsTableModule;
 using CricInfo.Application.Mapping.CompletedModule;
+using CricInfo.Application.Services.PointsTableModule;
 using CricInfo.Infrastructure;
 using CricInfo.Infrastructure.presistence;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,9 @@ builder.Services.AddDbContext<CricDbContext>(options =>
 builder.Services.AddInfrastructure();
 builder.Services.AddAutoMapper(typeof(ILiveService).Assembly);
 builder.Services.AddAutoMapper(typeof(CompletedMappingProfile).Assembly);
+builder.Services.AddScoped<
+    IPointsTableService,
+    PointsTableService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
