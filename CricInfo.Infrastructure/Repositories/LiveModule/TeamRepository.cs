@@ -21,4 +21,15 @@ public class TeamRepository : ITeamRepository
        .OrderBy(x => x.TeamId)
        .ToListAsync();
     }
+    public async Task<List<Team>> GetAllTeamsAsync()
+    {
+        return await _context.Teams.ToListAsync();
+    }
+
+    public async Task<List<Team>> GetTeamsUntilMatchAsync(int matchNo)
+    {
+        return await _context.Teams
+            .Where(x => x.matchNo <= matchNo)
+            .ToListAsync();
+    }
 }
