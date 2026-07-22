@@ -1,83 +1,100 @@
 ﻿using AutoMapper;
 using CricInfo.Application.DTOs.CompletedModule;
 using CricInfo.Application.Interfaces.Repositories.CompletedModule;
-using CricInfo.Application.Interfaces.Repositories.LiveModule;
 using CricInfo.Application.Interfaces.Services.CompletedModule;
 using CricInfo.Domain.Entities;
 
-public class CompletedService : ICompletedService
+namespace CricInfo.Application.Services.CompletedModule
 {
-    private readonly IMatchesRepository _matchRepository;
-    private readonly ITeamRepository _teamRepository;
-    private readonly IBattingRepository _battingRepository;
-    private readonly IBowlingRepository _bowlingRepository;
-    private readonly IMapper _mapper;
-
-    public CompletedService(
-        IMatchesRepository matchRepository,
-        ITeamRepository teamRepository,
-        IBattingRepository battingRepository,
-        IBowlingRepository bowlingRepository,
-        IMapper mapper)
+    public class CompletedService : ICompletedService
     {
-        _matchRepository = matchRepository;
-        _teamRepository = teamRepository;
-        _battingRepository = battingRepository;
-        _bowlingRepository = bowlingRepository;
-        _mapper = mapper;
-    }
+        private readonly ICompletedRepository _completedRepository;
+        private readonly IMapper _mapper;
 
-    public async Task<CompletedMatchResponseDto?> GetCompletedMatchAsync(int matchNo)
-    {
-        var match = await _matchRepository.GetMatchByMatchNoAsync(matchNo);
-
-        if (match == null)
-            return null;
-
-        if (!string.Equals(match.status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        return await BuildCompletedMatch(match);
-    }
-
-    public async Task<List<CompletedMatchResponseDto>> GetCompletedMatchesAsync()
-    {
-        var matches = await _matchRepository.GetCompletedMatchesAsync();
-
-        var result = new List<CompletedMatchResponseDto>();
-
-        foreach (var match in matches)
+        public CompletedService(
+            ICompletedRepository completedRepository,
+            IMapper mapper)
         {
-            result.Add(await BuildCompletedMatch(match));
+            _completedRepository = completedRepository;
+            _mapper = mapper;
         }
 
-        return result;
-    }
-
-    private async Task<CompletedMatchResponseDto> BuildCompletedMatch(Match match)
-    {
-        var teams = await _teamRepository.GetTeamsByMatchNoAsync(match.matchNo);
-
-        var response = _mapper.Map<CompletedMatchResponseDto>(match);
-
-        response.teams = new List<CompletedTeamResponseDto>();
-
-        foreach (var team in teams)
+        public async Task<CompletedMatchResponseDto?> GetCompletedMatchAsync(int matchNo)
         {
-            var teamDto = _mapper.Map<CompletedTeamResponseDto>(team);
+            var match = await _completedRepository.GetCompletedMatchAsync(matchNo);
 
-            var batting = await _battingRepository
-                .GetBattingByMatchNoAsync(match.matchNo, team.TeamId);
+            if (match == null)
+                return null;
 
-            var bowling = await _bowlingRepository
-                .GetBowlingByMatchNoAsync(match.matchNo, team.TeamId);
+            var teams = await _completedRepository.GetTeamsByMatchNoAsync(matchNo);
 
-            teamDto.batting = _mapper.Map<List<BattingResponseDto>>(batting);
-            teamDto.bowling = _mapper.Map<List<BowlingResponseDto>>(bowling);
+            var response = _mapper.Map<CompletedMatchResponseDto>(match);
 
-            response.teams.Add(teamDto);
+            foreach (var team in teams)
+            {
+                var teamDto = _mapper.Map<CompletedTeamResponseDto>(team);
+
+                var batting = await _completedRepository.GetBattingByMatchNoAsync(matchNo);
+
+                var bowling = await _completedRepository.GetBowlingByMatchNoAsync(matchNo);
+
+                teamDto.batting = _mapper.Map<List<BattingResponseDto>>(
+                    batting.Where(x => x.TeamId == team.TeamId));
+
+                teamDto.bowling = _mapper.Map<List<BowlingResponseDto>>(
+                    bowling.Where(x => x.TeamId == team.TeamId));
+
+                response.teams.Add(teamDto);
+            }
+
+            return response;
         }
 
-        return response;
+        public async Task<List<CompletedMatchResponseDto>> GetCompletedMatchesAsync()
+        {
+            var matches = await _completedRepository.GetCompletedMatchesAsync();
+
+            var matchNos = matches
+                .Select(x => x.matchNo)
+                .ToList();
+
+            var teams = await _completedRepository.GetTeamsByMatchNosAsync(matchNos);
+
+            var batting = await _completedRepository.GetBattingByMatchNosAsync(matchNos);
+
+            var bowling = await _completedRepository.GetBowlingByMatchNosAsync(matchNos);
+
+            var result = new List<CompletedMatchResponseDto>();
+
+            foreach (var match in matches)
+            {
+                var matchDto = _mapper.Map<CompletedMatchResponseDto>(match);
+
+                var matchTeams = teams
+                    .Where(t => t.matchNo == match.matchNo)
+                    .ToList();
+
+                foreach (var team in matchTeams)
+                {
+                    var teamDto = _mapper.Map<CompletedTeamResponseDto>(team);
+
+                    teamDto.batting = _mapper.Map<List<BattingResponseDto>>(
+                        batting.Where(b =>
+                            b.MatchNo == match.matchNo &&
+                            b.TeamId == team.TeamId));
+
+                    teamDto.bowling = _mapper.Map<List<BowlingResponseDto>>(
+                        bowling.Where(b =>
+                            b.MatchNo == match.matchNo &&
+                            b.TeamId == team.TeamId));
+
+                    matchDto.teams.Add(teamDto);
+                }
+
+                result.Add(matchDto);
+            }
+
+            return result;
+        }
     }
 }
