@@ -2,6 +2,7 @@ using CricInfo.Application.Interfaces.Services.LiveModule;
 using CricInfo.Infrastructure;
 using CricInfo.Infrastructure.presistence;
 using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -13,6 +14,12 @@ builder.Services.AddDbContext<CricDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultString")));
 builder.Services.AddInfrastructure();
 builder.Services.AddAutoMapper(typeof(ILiveService).Assembly);
+
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
