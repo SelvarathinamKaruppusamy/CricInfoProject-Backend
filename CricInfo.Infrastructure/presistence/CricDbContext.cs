@@ -29,5 +29,8 @@ namespace CricInfo.Infrastructure.presistence
 
             base.OnModelCreating(modelBuilder);
         }
+        public DbSet<Batting> Batting { get; set; }
+
+        public DbSet<Bowling> Bowling { get; set; }
     }
 }
