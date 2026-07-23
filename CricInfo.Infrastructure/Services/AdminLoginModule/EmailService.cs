@@ -1,10 +1,18 @@
 ﻿using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.Extensions.Configuration;
 using MimeKit;
 using System.Net;
 
 public class EmailService
 {
+    private readonly IConfiguration _configuration;
+
+    public EmailService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
     public async Task SendMail(
         string toEmail,
         string userName,
@@ -15,18 +23,29 @@ public class EmailService
             ServicePointManager.SecurityProtocol =
                 SecurityProtocolType.Tls12;
 
-            Console.WriteLine(
-                $"DOT NET VERSION : {Environment.Version}");
+            string from =
+                _configuration["EmailSettings:From"]!;
+
+            string host =
+                _configuration["EmailSettings:Host"]!;
+
+            int port =
+                int.Parse(
+                    _configuration["EmailSettings:Port"]!);
+
+            string smtpUser =
+                _configuration["EmailSettings:Username"]!;
+
+            string smtpPassword =
+                _configuration["EmailSettings:Password"]!;
 
             var email = new MimeMessage();
 
             email.From.Add(
-                MailboxAddress.Parse(
-                    "nihilritthik@gmail.com"));
+                MailboxAddress.Parse(from));
 
             email.To.Add(
-                MailboxAddress.Parse(
-                    toEmail));
+                MailboxAddress.Parse(toEmail));
 
             email.Subject =
                 "CricInfo Admin Account Created";
@@ -57,8 +76,7 @@ CricInfo Team
 "
                 };
 
-            using var smtp =
-                new MailKit.Net.Smtp.SmtpClient();
+            using var smtp = new SmtpClient();
 
             smtp.ServerCertificateValidationCallback =
                 (s, c, h, e) => true;
@@ -68,16 +86,16 @@ CricInfo Team
             Console.WriteLine("Connecting...");
 
             await smtp.ConnectAsync(
-                "smtp-relay.brevo.com",
-                587,
-                SecureSocketOptions.None);
+                host,
+                port,
+                SecureSocketOptions.StartTls);
 
             Console.WriteLine(
                 "Connected Successfully.");
 
             await smtp.AuthenticateAsync(
-                "b30784001@smtp-brevo.com",
-                "xsmtpsib-5f25b586e31bf7412250462d0239947f9d02909831308e57a3dfe1a7342fb419-9UmKLa2azIPLArfV");
+                smtpUser,
+                smtpPassword);
 
             Console.WriteLine(
                 "Authenticated Successfully.");
