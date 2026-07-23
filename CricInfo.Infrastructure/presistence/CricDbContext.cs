@@ -21,6 +21,8 @@ namespace CricInfo.Infrastructure.presistence
 
         public DbSet<Player> Players { get; set; }
 
+        public DbSet<Blog> Blogs => Set<Blog>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(CricDbContext).Assembly);

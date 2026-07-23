@@ -1,9 +1,13 @@
-﻿using CricInfo.Application.Interfaces.Repositories.CompletedModule;
+using CricInfo.Application.Interfaces.Repositories.BlogModule;
+using CricInfo.Application.Interfaces.Repositories.CompletedModule;
 using CricInfo.Application.Interfaces.Repositories.LiveModule;
+using CricInfo.Application.Interfaces.Services.BlogModule;
 using CricInfo.Application.Interfaces.Services.CompletedModule;
 using CricInfo.Application.Interfaces.Services.LiveModule;
+using CricInfo.Application.Services.BlogModule;
 using CricInfo.Application.Services.CompletedModule;
 using CricInfo.Application.Services.LiveModule;
+using CricInfo.Infrastructure.Repositories.BlogModule;
 using CricInfo.Infrastructure.Repositories.CompletedModule;
 using CricInfo.Infrastructure.Repositories.LiveModule;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +26,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IPlayerRepository, PlayerRepository>();
+        services.AddScoped<IBlogRepository, BlogRepository>();
 
         // Completed Module
         services.AddScoped<ICompletedRepository, CompletedRepository>();
@@ -29,6 +34,10 @@ public static class DependencyInjection
         // Services
         services.AddScoped<ILiveService, LiveService>();
         services.AddScoped<ICompletedService, CompletedService>();
+        // Service
+
+        services.AddScoped<ILiveService, LiveService>();
+        services.AddScoped<IBlogService, BlogService>();
 
         return services;
     }
