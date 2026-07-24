@@ -31,11 +31,6 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<
     IPointsTableService,
     PointsTableService>();
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
 
 var app = builder.Build();
 
@@ -48,7 +43,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AngularPolicy");
 
 app.UseCors("AngularPolicy");
 
