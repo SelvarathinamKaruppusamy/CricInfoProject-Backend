@@ -1,19 +1,6 @@
-﻿namespace CricInfo.Application.DTOs.Live;
-
-public class PlayerDto
+﻿namespace CricInfo.Application.DTOs.Live.RequestDto;
+public class PlayerUpdateDto
 {
-    public int id { get; set; }
-
-    public int playerId { get; set; }
-
-    public int TeamId { get; set; }
-
-    public int matchNo { get; set; }
-
-    public string? name { get; set; }
-
-    public string? role { get; set; }
-
     public int runs { get; set; }
 
     public int balls { get; set; }
