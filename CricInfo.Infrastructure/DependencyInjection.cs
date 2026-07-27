@@ -18,6 +18,7 @@ public static class DependencyInjection
         // Service
         
         services.AddScoped<ILiveService, LiveService>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }

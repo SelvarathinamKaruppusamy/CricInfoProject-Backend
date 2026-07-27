@@ -14,11 +14,21 @@ public class TeamRepository : ITeamRepository
         _context = context;
     }
 
+    public async Task<Team?> GetTeamByIdAsync(int teamId, int matchNo)
+    {
+        return await _context.Teams.FirstOrDefaultAsync(x=>x.TeamId==teamId && x.matchNo==matchNo);
+    }
+
     public async Task<List<Team>> GetTeamsByMatchNoAsync(int matchNo)
     {
         return await _context.Teams
        .Where(x => x.matchNo == matchNo)
        .OrderBy(x => x.TeamId)
        .ToListAsync();
+    }
+
+    public async Task UpdateTeamAsync(Team team)
+    {
+        await _context.SaveChangesAsync();
     }
 }
