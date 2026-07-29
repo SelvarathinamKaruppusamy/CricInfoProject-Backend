@@ -39,6 +39,7 @@ namespace CricInfo.Domain.Entities
         public int? runsConceded { get; set; }
 
         public decimal? economy { get; set; }
+        public int bowlingBalls { get; set; }
 
         // Navigation Property
         public Team Team { get; set; } = null!;

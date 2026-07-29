@@ -1,9 +1,6 @@
 ﻿using CricInfo.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Text;
+
 
 
 namespace CricInfo.Infrastructure.presistence
@@ -21,11 +18,28 @@ namespace CricInfo.Infrastructure.presistence
 
         public DbSet<Player> Players { get; set; }
 
+        public DbSet<Blog> Blogs => Set<Blog>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(CricDbContext).Assembly);
 
             base.OnModelCreating(modelBuilder);
         }
+        public DbSet<Batting> Batting { get; set; }
+
+        public DbSet<Bowling> Bowling { get; set; }
+        public DbSet<Admin> Admins
+        {
+            get;
+            set;
+        }
+        public DbSet<QuizQuestion>
+    QuizQuestions
+        { get; set; }
+
+        public DbSet<QuizResult>
+            QuizResults
+        { get; set; }
     }
 }

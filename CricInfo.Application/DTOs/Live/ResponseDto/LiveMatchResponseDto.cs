@@ -1,4 +1,4 @@
-﻿using CricInfo.Application.DTOs.Live;
+﻿using CricInfo.Application.DTOs.Live.ResponseDto;
 
 public class LiveMatchResponseDto
 {
