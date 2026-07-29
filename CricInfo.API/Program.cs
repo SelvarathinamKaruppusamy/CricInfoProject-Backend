@@ -1,23 +1,42 @@
+using CricInfo.Application.Interfaces.Services.AdminLogin;
 using CricInfo.Application.Interfaces.Services.LiveModule;
 using CricInfo.Application.Interfaces.Services.PointsTableModule;
+
 using CricInfo.Application.Mapping.CompletedModule;
+
+using CricInfo.Application.Services.AdminLoginModule;
 using CricInfo.Application.Services.PointsTableModule;
+
 using CricInfo.Infrastructure;
 using CricInfo.Infrastructure.presistence;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ----------------------
+// Add services
+// ----------------------
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
+
 builder.Services.AddDbContext<CricDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultString")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultString")));
+
 builder.Services.AddInfrastructure();
+
+// AutoMapper
 builder.Services.AddAutoMapper(typeof(ILiveService).Assembly);
 builder.Services.AddAutoMapper(typeof(CompletedMappingProfile).Assembly);
 
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularPolicy", policy =>
@@ -28,13 +47,60 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-builder.Services.AddScoped<
-    IPointsTableService,
-    PointsTableService>();
 
-var app = builder.Build(); 
+// ----------------------
+// Points Table Services
+// ----------------------
 
-// Configure the HTTP request pipeline.
+builder.Services.AddScoped<IPointsTableService, PointsTableService>();
+
+// ----------------------
+// Admin Login Services
+// ----------------------
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<EmailService>();
+
+// ----------------------
+// Quiz Services
+// ----------------------
+
+builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+builder.Services.AddScoped<IQuizService, QuizService>();
+
+// ----------------------
+// JWT Authentication
+// ----------------------
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(
+                            builder.Configuration["Jwt:Key"]!))
+            };
+    });
+
+// ----------------------
+// Build Application
+// ----------------------
+
+var app = builder.Build();
+
+// ----------------------
+// Configure Middleware
+// ----------------------
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -43,6 +109,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AngularPolicy");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
