@@ -1,17 +1,7 @@
-﻿namespace CricInfo.Application.DTOs.Live;
+﻿namespace CricInfo.Application.DTOs.Live.RequestDto;
 
-public class MatchDto
+public class MatchUpdateDto
 {
-    public int id { get; set; }
-
-    public int matchNo { get; set; }
-
-    public string? venue { get; set; }
-
-    public string? city { get; set; }
-
-    public DateOnly? date { get; set; }
-
     public string? tossWinner { get; set; }
 
     public string? tossDecision { get; set; }
