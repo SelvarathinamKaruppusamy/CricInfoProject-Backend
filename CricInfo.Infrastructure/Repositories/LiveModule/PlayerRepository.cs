@@ -2,6 +2,7 @@
 using CricInfo.Domain.Entities;
 using CricInfo.Infrastructure.presistence;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.X509Certificates;
 
 namespace CricInfo.Infrastructure.Repositories.LiveModule;
 
@@ -14,6 +15,11 @@ public class PlayerRepository : IPlayerRepository
         _context = context;
     }
 
+    public async Task<Player?> GetPlayerByIdAsync(int playerId, int teamId, int matchNo)
+    {
+        return await _context.Players.FirstOrDefaultAsync(x=>x.playerId==playerId && x.TeamId==teamId && x.matchNo==matchNo);
+    }
+
     public async Task<List<Player>> GetPlayersByMatchNoAsync(int matchNo)
     {
         return await _context.Players
@@ -21,5 +27,28 @@ public class PlayerRepository : IPlayerRepository
       .OrderBy(x => x.TeamId)
       .ThenBy(x => x.playerId)
       .ToListAsync();
+    }
+
+    public async Task<List<Player>> GetPlayersByTeamAsync(int teamId, int matchNo)
+    {
+        return await _context.Players
+            .Where(x => x.TeamId == teamId && x.matchNo == matchNo)
+            .OrderBy(x => x.playerId)
+            .ToListAsync();
+    }
+
+    public async Task UpdatePlayerAsync(Player player)
+    {
+        await _context.SaveChangesAsync();
+    }
+    public async Task<Player?> GetNextBatterAsync(int teamId, int matchNo)
+    {
+        return await _context.Players
+            .Where(x =>
+                x.TeamId == teamId &&
+                x.matchNo == matchNo &&
+                x.status == "Yet To Play")
+            .OrderBy(x => x.playerId)
+            .FirstOrDefaultAsync();
     }
 }

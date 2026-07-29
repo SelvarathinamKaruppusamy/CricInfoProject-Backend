@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CricInfo.API.Controllers.CompletedModule;
 
+using CricInfo.Application.Services.CompletedModule;
+using System.Diagnostics;
+
+
 [ApiController]
 [Route("api/[controller]")]
 public class CompletedController : ControllerBase
@@ -15,12 +19,13 @@ public class CompletedController : ControllerBase
     }
 
     // GET: api/completed
-    [HttpGet]
+   [HttpGet]
     public async Task<IActionResult> GetCompletedMatches()
     {
         var result = await _completedService.GetCompletedMatchesAsync();
         return Ok(result);
     }
+
 
     // GET: api/completed/1
     [HttpGet("{matchNo}")]
@@ -33,4 +38,5 @@ public class CompletedController : ControllerBase
 
         return Ok(result);
     }
+
 }
