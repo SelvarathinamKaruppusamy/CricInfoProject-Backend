@@ -12,9 +12,9 @@ using CricInfo.Infrastructure.presistence;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +36,6 @@ builder.Services.AddInfrastructure();
 builder.Services.AddAutoMapper(typeof(ILiveService).Assembly);
 builder.Services.AddAutoMapper(typeof(CompletedMappingProfile).Assembly);
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularPolicy", policy =>
@@ -90,6 +89,9 @@ builder.Services
                             builder.Configuration["Jwt:Key"]!))
             };
     });
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
 // ----------------------
 // Build Application
