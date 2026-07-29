@@ -1,9 +1,6 @@
 ﻿using CricInfo.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Text;
+
 
 
 namespace CricInfo.Infrastructure.presistence
