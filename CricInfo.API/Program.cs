@@ -11,9 +11,6 @@ using CricInfo.Infrastructure;
 using CricInfo.Infrastructure.presistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,64 +28,10 @@ builder.Services.AddInfrastructure();
 
 builder.Services.AddAutoMapper(typeof(ILiveService).Assembly);
 
-builder.Services.AddAutoMapper(
-    typeof(CompletedMappingProfile).Assembly);
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AngularPolicy", policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:4200")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// PointStable Services
 
-builder.Services.AddScoped<
-    IPointsTableService,
-    PointsTableService>();
-
-// Admin Login Service
-
-builder.Services.AddScoped<
-    IAuthService,
-    AuthService>();
-builder.Services.AddScoped<EmailService>();
-
-builder.Services
-    .AddScoped<
-        IQuizRepository,
-        QuizRepository>();
-
-builder.Services
-    .AddScoped<
-        IQuizService,
-        QuizService>();
-
-// JWT Authentication
-
-builder.Services
-    .AddAuthentication(
-        JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters =
-            new TokenValidationParameters
-            {
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-
-                IssuerSigningKey =
-                    new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(
-                            builder.Configuration["Jwt:Key"]!))
-            };
-    });
 
 var app = builder.Build();
 
