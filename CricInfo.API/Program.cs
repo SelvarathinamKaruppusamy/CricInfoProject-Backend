@@ -58,6 +58,16 @@ builder.Services.AddScoped<
     AuthService>();
 builder.Services.AddScoped<EmailService>();
 
+builder.Services
+    .AddScoped<
+        IQuizRepository,
+        QuizRepository>();
+
+builder.Services
+    .AddScoped<
+        IQuizService,
+        QuizService>();
+
 // JWT Authentication
 
 builder.Services

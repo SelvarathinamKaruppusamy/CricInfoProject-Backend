@@ -35,5 +35,12 @@ namespace CricInfo.Infrastructure.presistence
             get;
             set;
         }
+        public DbSet<QuizQuestion>
+    QuizQuestions
+        { get; set; }
+
+        public DbSet<QuizResult>
+            QuizResults
+        { get; set; }
     }
 }
