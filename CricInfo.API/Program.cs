@@ -1,6 +1,9 @@
 using CricInfo.API.Filters;
 using CricInfo.API.Middleware;
 using CricInfo.Application.Interfaces.Services.LiveModule;
+using CricInfo.Application.Interfaces.Services.PointsTableModule;
+using CricInfo.Application.Mapping.CompletedModule;
+using CricInfo.Application.Services.PointsTableModule;
 using CricInfo.Infrastructure;
 using CricInfo.Infrastructure.presistence;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +19,8 @@ builder.Services.AddDbContext<CricDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultString")));
 builder.Services.AddInfrastructure();
 builder.Services.AddAutoMapper(typeof(ILiveService).Assembly);
+builder.Services.AddAutoMapper(typeof(CompletedMappingProfile).Assembly);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularPolicy", policy =>
@@ -26,6 +31,10 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+builder.Services.AddScoped<
+    IPointsTableService,
+    PointsTableService>();
+
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
@@ -40,6 +49,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AngularPolicy");
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+app.UseCors("AngularPolicy");
 
 app.UseAuthorization();
 

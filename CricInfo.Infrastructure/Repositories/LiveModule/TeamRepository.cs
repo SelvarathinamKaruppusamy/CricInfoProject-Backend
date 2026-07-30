@@ -68,10 +68,15 @@ public class TeamRepository(
             team.matchNo);
 
         await _context.SaveChangesAsync();
+    public async Task<List<Team>> GetAllTeamsAsync()
+    {
+        return await _context.Teams.ToListAsync();
+    }
 
-        _logger.LogInformation(
-            "Team changes saved successfully. TeamId: {TeamId}, MatchNo: {MatchNo}",
-            team.TeamId,
-            team.matchNo);
+    public async Task<List<Team>> GetTeamsUntilMatchAsync(int matchNo)
+    {
+        return await _context.Teams
+            .Where(x => x.matchNo <= matchNo)
+            .ToListAsync();
     }
 }

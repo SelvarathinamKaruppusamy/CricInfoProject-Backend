@@ -9,3 +9,7 @@ public interface ITeamRepository
 
     Task UpdateTeamAsync(Team team);
 }
+    Task<List<Team>> GetTeamsUntilMatchAsync(int matchNo);
+    Task<List<Team>> GetAllTeamsAsync();
+
+}
