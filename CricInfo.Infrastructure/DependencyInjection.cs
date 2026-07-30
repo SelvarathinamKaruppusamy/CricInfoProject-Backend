@@ -32,6 +32,10 @@ public static class DependencyInjection
             CricInfo.Application.Interfaces.Repositories.LiveModule.IMatchRepository,
             LiveMatchRepository>();
 
+      
+        
+        // Repository
+        services.AddScoped<IMatchRepository, MatchRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<IUpcomingRepository, UpcomingRepository>();
@@ -45,7 +49,6 @@ public static class DependencyInjection
         services.AddScoped<ILiveService, LiveService>();
         services.AddScoped<ICompletedService, CompletedService>();
         // Service
-
         services.AddScoped<ILiveService, LiveService>();
         services.AddScoped<IUpcomingService, UpcomingService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();

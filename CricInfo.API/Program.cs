@@ -1,3 +1,5 @@
+using CricInfo.API.Filters;
+using CricInfo.API.Middleware;
 using CricInfo.Application.Interfaces.Services.AdminLogin;
 using CricInfo.Application.Interfaces.Services.LiveModule;
 using CricInfo.Application.Interfaces.Services.PointsTableModule;
@@ -12,6 +14,7 @@ using CricInfo.Infrastructure.presistence;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
@@ -22,6 +25,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 // ----------------------
 
+builder.Services.AddScoped<ActionLoggingFilter>();
+builder.Services.AddControllers(options=> { options.Filters.Add<ActionLoggingFilter>();});
 builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
@@ -47,6 +52,12 @@ builder.Services.AddCors(options =>
     });
 });
 
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+var app = builder.Build();
 // ----------------------
 // Points Table Services
 // ----------------------
@@ -109,6 +120,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AngularPolicy");
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseCors("AngularPolicy");
 
