@@ -68,6 +68,7 @@ public class TeamRepository(
             team.matchNo);
 
         await _context.SaveChangesAsync();
+    }
     public async Task<List<Team>> GetAllTeamsAsync()
     {
         return await _context.Teams.ToListAsync();
