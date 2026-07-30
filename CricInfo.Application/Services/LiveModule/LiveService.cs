@@ -6,11 +6,13 @@ using CricInfo.Application.Interfaces.Repositories.CompletedModule;
 using CricInfo.Application.Interfaces.Repositories.LiveModule;
 using CricInfo.Application.Interfaces.Services.LiveModule;
 using CricInfo.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace CricInfo.Application.Services.LiveModule;
 
-public class LiveService : ILiveService
+public class LiveService(IMatchRepository _matchRepository, ITeamRepository _teamRepository, IPlayerRepository _playerRepository, IMapper _mapper, IUnitOfWork _unitOfWork, ILogger<LiveService> _logger) : ILiveService
 {
+<<<<<<< HEAD
     private readonly IMatchRepository _matchRepository;
     private readonly ITeamRepository _teamRepository;
     private readonly IPlayerRepository _playerRepository;
@@ -40,18 +42,39 @@ public class LiveService : ILiveService
         _bowlingRepository = bowlingRepository;
     }
 
+=======
+>>>>>>> ff4532ef6713a1f27084dc990faf472b3483d223
     public async Task<MatchDto?> GetLiveMatchAsync()
     {
+        _logger.LogInformation("Fetching current live match.");
+
         var match = await _matchRepository.GetCurrentLiveMatchAsync();
 
         if (match == null)
+        {
+            _logger.LogWarning("No live match found in the database.");
             return null;
+        }
+
+        _logger.LogInformation(
+            "Live match found. Match No: {MatchNo}",
+            match.matchNo);
 
         var matchNo = match.matchNo;
 
         var teams = await _teamRepository.GetTeamsByMatchNoAsync(matchNo);
 
+        _logger.LogInformation(
+            "Retrieved {TeamCount} teams for Match {MatchNo}.",
+            teams.Count,
+            matchNo);
+
         var players = await _playerRepository.GetPlayersByMatchNoAsync(matchNo);
+
+        _logger.LogInformation(
+            "Retrieved {PlayerCount} players for Match {MatchNo}.",
+            players.Count,
+            matchNo);
 
         var matchDto = _mapper.Map<MatchDto>(match);
 
@@ -64,6 +87,11 @@ public class LiveService : ILiveService
             );
 
             matchDto.Teams.Add(teamDto);
+
+            _logger.LogInformation(
+                "Mapped Team {TeamName} with {PlayerCount} players.",
+                team.shortName,
+                teamDto.Players.Count);
         }
 
         matchDto.FirstInningsBalls =
@@ -76,54 +104,216 @@ public class LiveService : ILiveService
                 matchNo,
                 new List<string>());
 
+        _logger.LogInformation(
+            "Loaded ball history. First Innings: {FirstBalls}, Second Innings: {SecondBalls}.",
+            matchDto.FirstInningsBalls.Count,
+            matchDto.SecondInningsBalls.Count);
+
+        _logger.LogInformation(
+            "Successfully prepared Live Match response for Match {MatchNo}.",
+            matchNo);
+
         return matchDto;
     }
 
-    public async Task<PlayerDto?> GetLivePlayerAsync(int playerid, int teamId, int matchNo)
+    public async Task<PlayerDto?> GetLivePlayerAsync(
+    int playerId,
+    int teamId,
+    int matchNo)
     {
-        var Player = await _playerRepository.GetPlayerByIdAsync(playerid, teamId, matchNo);
-        return _mapper.Map<PlayerDto>(Player);
+        _logger.LogInformation(
+            "Fetching player. MatchNo: {MatchNo}, TeamId: {TeamId}, PlayerId: {PlayerId}",
+            matchNo,
+            teamId,
+            playerId);
+
+        var player = await _playerRepository.GetPlayerByIdAsync(
+            playerId,
+            teamId,
+            matchNo);
+
+        if (player == null)
+        {
+            _logger.LogWarning(
+                "Player not found. MatchNo: {MatchNo}, TeamId: {TeamId}, PlayerId: {PlayerId}",
+                matchNo,
+                teamId,
+                playerId);
+
+            return null;
+        }
+
+        _logger.LogInformation(
+            "Player '{PlayerName}' retrieved successfully.",
+            player.name);
+
+        return _mapper.Map<PlayerDto>(player);
     }
 
-    public async Task<TeamDto?> GetLiveTeamAsync(int teamid, int MatchNo)
+    public async Task<TeamDto?> GetLiveTeamAsync(
+     int teamId,
+     int matchNo)
     {
-        var Team = await _teamRepository.GetTeamByIdAsync(teamid, MatchNo);
-        return _mapper.Map<TeamDto?>(Team);
+        _logger.LogInformation(
+            "Fetching team. MatchNo: {MatchNo}, TeamId: {TeamId}",
+            matchNo,
+            teamId);
+
+        var team = await _teamRepository.GetTeamByIdAsync(
+            teamId,
+            matchNo);
+
+        if (team == null)
+        {
+            _logger.LogWarning(
+                "Team not found. MatchNo: {MatchNo}, TeamId: {TeamId}",
+                matchNo,
+                teamId);
+
+            return null;
+        }
+
+        _logger.LogInformation(
+            "Team '{TeamName}' retrieved successfully.",
+            team.shortName);
+
+        return _mapper.Map<TeamDto>(team);
     }
 
-    public async Task<bool> UpdateMatchAsync(int matchNo, MatchUpdateDto dto)
+    public async Task<bool> UpdateMatchAsync(
+    int matchNo,
+    MatchUpdateDto dto)
     {
-        var Match = await _matchRepository.GetMatchByMatchNoAsync(matchNo);
-        if (Match == null)
+        _logger.LogInformation(
+            "Updating match. MatchNo: {MatchNo}",
+            matchNo);
+
+        var match = await _matchRepository.GetMatchByMatchNoAsync(matchNo);
+
+        if (match == null)
+        {
+            _logger.LogWarning(
+                "Match not found. MatchNo: {MatchNo}",
+                matchNo);
+
             return false;
-        _mapper.Map(dto, Match);
-        await _matchRepository.UpdateMatchAsync(Match);
+        }
+
+        _mapper.Map(dto, match);
+
+        _logger.LogInformation(
+            "Mapped updated values to Match {MatchNo}.",
+            matchNo);
+
+        await _matchRepository.UpdateMatchAsync(match);
+
+        _logger.LogInformation(
+            "Match updated successfully. MatchNo: {MatchNo}",
+            matchNo);
+
         return true;
     }
 
-    public async Task<bool> UpdatePlayerAsync(int playerId, int teamId, int matchNo, PlayerUpdateDto dto)
+    public async Task<bool> UpdatePlayerAsync(
+     int playerId,
+     int teamId,
+     int matchNo,
+     PlayerUpdateDto dto)
     {
-        var Player = await _playerRepository.GetPlayerByIdAsync(playerId, teamId, matchNo);
-        if (Player == null) return false;
-        _mapper.Map(dto, Player);
-        await _playerRepository.UpdatePlayerAsync(Player);
+        _logger.LogInformation(
+            "Updating player. MatchNo: {MatchNo}, TeamId: {TeamId}, PlayerId: {PlayerId}",
+            matchNo,
+            teamId,
+            playerId);
+
+        var player = await _playerRepository.GetPlayerByIdAsync(
+            playerId,
+            teamId,
+            matchNo);
+
+        if (player == null)
+        {
+            _logger.LogWarning(
+                "Player not found. MatchNo: {MatchNo}, TeamId: {TeamId}, PlayerId: {PlayerId}",
+                matchNo,
+                teamId,
+                playerId);
+
+            return false;
+        }
+
+        _mapper.Map(dto, player);
+
+        _logger.LogInformation(
+            "Mapped updated values to Player '{PlayerName}'.",
+            player.name);
+
+        await _playerRepository.UpdatePlayerAsync(player);
+
+        _logger.LogInformation(
+            "Player updated successfully. MatchNo: {MatchNo}, TeamId: {TeamId}, PlayerId: {PlayerId}",
+            matchNo,
+            teamId,
+            playerId);
+
         return true;
     }
 
-    public async Task<bool> UpdateTeamAsync(int teamId, int matchNo, TeamUpdateDto dto)
+    public async Task<bool> UpdateTeamAsync(
+    int teamId,
+    int matchNo,
+    TeamUpdateDto dto)
     {
-        var Team = await _teamRepository.GetTeamByIdAsync(teamId, matchNo);
-        if (Team == null) return false;
-        _mapper.Map(dto, Team);
-        await _teamRepository.UpdateTeamAsync(Team);
+        _logger.LogInformation(
+            "Updating team. MatchNo: {MatchNo}, TeamId: {TeamId}",
+            matchNo,
+            teamId);
+
+        var team = await _teamRepository.GetTeamByIdAsync(
+            teamId,
+            matchNo);
+
+        if (team == null)
+        {
+            _logger.LogWarning(
+                "Team not found. MatchNo: {MatchNo}, TeamId: {TeamId}",
+                matchNo,
+                teamId);
+
+            return false;
+        }
+
+        _mapper.Map(dto, team);
+
+        _logger.LogInformation(
+            "Mapped updated values to Team '{TeamName}'.",
+            team.shortName);
+
+        await _teamRepository.UpdateTeamAsync(team);
+
+        _logger.LogInformation(
+            "Team updated successfully. MatchNo: {MatchNo}, TeamId: {TeamId}",
+            matchNo,
+            teamId);
+
         return true;
     }
     public async Task<bool> ProcessBallAsync(BallUpdateDto dto)
     {
+        _logger.LogInformation(
+    "Processing ball. MatchNo: {MatchNo}, Ball: {BallResult}",
+    dto.matchNo,
+    dto.ballResult);
         var match = await _matchRepository.GetMatchByMatchNoAsync(dto.matchNo);
 
         if (match == null)
+        {
+            _logger.LogWarning(
+                "Match not found. MatchNo: {MatchNo}",
+                dto.matchNo);
+
             return false;
+        }
 
         var battingTeam = await _teamRepository.GetTeamByIdAsync(
      match.currentBattingTeamIndex!.Value,
@@ -147,7 +337,13 @@ public class LiveService : ILiveService
             match.currentBowlerPlayerId!.Value,
             bowlingTeam!.TeamId,
             match.matchNo);
-
+        _logger.LogInformation(
+    "Current State | Innings: {Innings} | Batting: {BattingTeam} {Runs}/{Wickets} | Bowling: {BowlingTeam}",
+    match.currentInnings,
+    battingTeam.shortName,
+    battingTeam.runs,
+    battingTeam.wickets,
+    bowlingTeam.shortName);
         if (battingTeam == null ||
             bowlingTeam == null ||
             striker == null ||
@@ -160,6 +356,7 @@ public class LiveService : ILiveService
         switch (dto.ballResult)
         {
             case "0":
+                _logger.LogInformation("Dot ball by {Bowler} to {Batter}.",bowler.name,striker.name);
                 UpdateLegalBall(battingTeam, striker, bowler);
                 UpdateStrikeRate(striker);
                 UpdateEconomy(bowler);
@@ -167,6 +364,7 @@ public class LiveService : ILiveService
                 break;
 
             case "1":
+                _logger.LogInformation("{Batter} scored 1 run.",striker.name);
                 UpdateLegalBall(battingTeam, striker, bowler);
                 AddRuns(battingTeam, striker, bowler, 1);
                 UpdateScore(battingTeam);
@@ -177,6 +375,7 @@ public class LiveService : ILiveService
                 break;
 
             case "2":
+                _logger.LogInformation("{Batter} scored 2 runs.",striker.name);
                 UpdateLegalBall(battingTeam, striker, bowler);
                 AddRuns(battingTeam, striker, bowler, 2);
                 UpdateScore(battingTeam);
@@ -186,6 +385,7 @@ public class LiveService : ILiveService
                 break;
 
             case "3":
+                _logger.LogInformation("{Batter} scored 3 runs.",striker.name);
                 UpdateLegalBall(battingTeam, striker, bowler);
                 AddRuns(battingTeam, striker, bowler, 3);
                 UpdateScore(battingTeam);
@@ -196,6 +396,7 @@ public class LiveService : ILiveService
                 break;
 
             case "4":
+                _logger.LogInformation("FOUR! {Batter} hit a boundary.",striker.name);
                 UpdateLegalBall(battingTeam, striker, bowler);
                 AddRuns(battingTeam, striker, bowler, 4);
                 striker.fours++;
@@ -206,6 +407,7 @@ public class LiveService : ILiveService
                 break;
 
             case "6":
+                _logger.LogInformation("SIX! {Batter} cleared the boundary.",striker.name);
                 UpdateLegalBall(battingTeam, striker, bowler);
                 AddRuns(battingTeam, striker, bowler, 6);
                 striker.sixes++;
@@ -216,14 +418,17 @@ public class LiveService : ILiveService
                 break;
 
             case "WD":
+                _logger.LogInformation("Wide ball by {Bowler}.",bowler.name);
                 HandleWide(battingTeam, bowler);
                 break;
 
             case "NB":
+                _logger.LogInformation("No Ball by {Bowler}.",bowler.name);
                 HandleNoBall(battingTeam, bowler);
                 break;
 
             case "W":
+                _logger.LogInformation("WICKET! {Batter} dismissed by {Bowler}.",striker.name,bowler.name);
                 UpdateLegalBall(battingTeam, striker, bowler);
                 await HandleWicket(battingTeam, striker, bowler, match);
                 UpdateStrikeRate(striker);
@@ -237,25 +442,24 @@ public class LiveService : ILiveService
         if (match.currentInnings == 1 &&
     IsFirstInningsCompleted(battingTeam))
         {
+            _logger.LogInformation("First innings completed. Score: {Team} {Runs}/{Wickets}",battingTeam.shortName,battingTeam.runs,battingTeam.wickets);
             await StartSecondInningsAsync(match.matchNo);
             await _unitOfWork.SaveChangesAsync();
 
             return true;
         }
-        if (match.currentInnings == 2 &&
-    IsMatchCompleted(match, battingTeam, bowlingTeam))
-        {
-            FinishMatch(match, battingTeam, bowlingTeam);
-            MatchBallStore.FirstInningsBalls.TryRemove(match.matchNo, out _);
-            MatchBallStore.SecondInningsBalls.TryRemove(match.matchNo, out _);
-        }
-        StoreBall(
-    match.matchNo,
-    match.currentInnings!.Value,
-    dto.ballResult
-);
-        await _unitOfWork.SaveChangesAsync();
 
+        StoreBall(match.matchNo,match.currentInnings!.Value,dto.ballResult);
+        _logger.LogInformation("Ball stored in MatchBallStore. MatchNo: {MatchNo}",match.matchNo);
+        if (match.currentInnings == 2 &&IsMatchCompleted(match, battingTeam, bowlingTeam))
+        {
+            _logger.LogInformation("Match completed. Result: {Result}",match.result);
+           await FinishMatch(match, battingTeam, bowlingTeam);
+
+        }
+        _logger.LogInformation("Saving match updates.");
+        await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Ball processed successfully.");
         return true;
     }
     private void HandleWide(
@@ -271,6 +475,7 @@ public class LiveService : ILiveService
         UpdateScore(battingTeam);
 
         UpdateEconomy(bowler);
+        _logger.LogInformation("Wide ball processed. Team: {Team}, Score: {Runs}/{Wickets}, Extras: {Extras}, Bowler: {Bowler}",battingTeam.shortName,battingTeam.runs,battingTeam.wickets,battingTeam.extras,bowler.name);
     }
     private void HandleNoBall(
     Team battingTeam,
@@ -285,13 +490,26 @@ public class LiveService : ILiveService
         UpdateScore(battingTeam);
 
         UpdateEconomy(bowler);
+
+        _logger.LogInformation(
+            "No Ball processed. Team: {Team}, Score: {Runs}/{Wickets}, Extras: {Extras}, Bowler: {Bowler}",
+            battingTeam.shortName,
+            battingTeam.runs,
+            battingTeam.wickets,
+            battingTeam.extras,
+            bowler.name);
     }
     private async Task HandleWicket(
-     Team battingTeam,
-     Player striker,
-     Player bowler,
-     Match match)
+        Team battingTeam,
+        Player striker,
+        Player bowler,
+        Match match)
     {
+        _logger.LogInformation(
+            "Wicket! Batter: {Batter}, Bowler: {Bowler}",
+            striker.name,
+            bowler.name);
+
         battingTeam.wickets++;
 
         striker.status = "Out";
@@ -304,13 +522,23 @@ public class LiveService : ILiveService
 
         if (nextBatter == null)
         {
+            _logger.LogInformation(
+                "No batsmen remaining. Team {Team} is all out at {Runs}/{Wickets}.",
+                battingTeam.shortName,
+                battingTeam.runs,
+                battingTeam.wickets);
+
             UpdateScore(battingTeam);
+
             return;
         }
 
         nextBatter.status = "Batting";
 
-        // Keep the non-striker batting
+        _logger.LogInformation(
+            "New batter {NextBatter} has come to the crease.",
+            nextBatter.name);
+
         var nonStriker = await _playerRepository.GetPlayerByIdAsync(
             match.nonStrikerPlayerId!.Value,
             battingTeam.TeamId,
@@ -319,13 +547,23 @@ public class LiveService : ILiveService
         if (nonStriker != null)
         {
             nonStriker.status = "Batting";
+
+            _logger.LogInformation(
+                "Non-striker remains {NonStriker}.",
+                nonStriker.name);
         }
 
         match.strikerPlayerId = nextBatter.playerId;
 
         UpdateScore(battingTeam);
+
+        _logger.LogInformation(
+            "Score after wicket: {Team} {Runs}/{Wickets}.",
+            battingTeam.shortName,
+            battingTeam.runs,
+            battingTeam.wickets);
     }
-    private static void SwapStrike(Match match)
+    private void SwapStrike(Match match)
     {
         var temp = match.strikerPlayerId;
 
@@ -406,65 +644,119 @@ public class LiveService : ILiveService
         );
     }
     private void HandleOverCompletion(
-    Match match,
-    Team battingTeam)
+     Match match,
+     Team battingTeam)
     {
         if (battingTeam.balls % 6 == 0)
         {
-            //battingTeam.overs++;
+            _logger.LogInformation(
+                "Over completed. Team: {Team}, Overs: {Overs}, Score: {Runs}/{Wickets}",
+                battingTeam.shortName,
+                battingTeam.overs,
+                battingTeam.runs,
+                battingTeam.wickets);
+
             SwapStrike(match);
         }
     }
     public async Task<bool> UpdateTossAsync(TossDto dto)
     {
+        _logger.LogInformation(
+            "Updating toss. MatchNo: {MatchNo}",
+            dto.MatchNo);
+
         var match = await _matchRepository.GetMatchByMatchNoAsync(dto.MatchNo);
 
         if (match == null)
+        {
+            _logger.LogWarning(
+                "Match not found. MatchNo: {MatchNo}",
+                dto.MatchNo);
+
             return false;
+        }
 
         match.tossWinner = dto.TossWinner;
         match.tossDecision = dto.TossDecision;
 
+        _logger.LogInformation(
+            "Toss updated. Winner: {Winner}, Decision: {Decision}",
+            dto.TossWinner,
+            dto.TossDecision);
+
         await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Toss details saved successfully for MatchNo: {MatchNo}",
+            dto.MatchNo);
 
         return true;
     }
     public async Task<bool> StartMatchAsync(int matchNo)
     {
+        _logger.LogInformation(
+            "Starting match. MatchNo: {MatchNo}",
+            matchNo);
+
         // Get Match
         var match = await _matchRepository.GetMatchByMatchNoAsync(matchNo);
 
         if (match == null)
+        {
+            _logger.LogWarning(
+                "Match not found. MatchNo: {MatchNo}",
+                matchNo);
+
             return false;
+        }
 
         // Check Toss
         if (string.IsNullOrWhiteSpace(match.tossWinner) ||
             string.IsNullOrWhiteSpace(match.tossDecision))
+        {
+            _logger.LogWarning(
+                "Cannot start match {MatchNo}. Toss details are not available.",
+                matchNo);
+
             return false;
+        }
+
+        _logger.LogInformation(
+            "Toss Winner: {Winner}, Decision: {Decision}",
+            match.tossWinner,
+            match.tossDecision);
 
         // Get Teams
         var teams = await _teamRepository.GetTeamsByMatchNoAsync(matchNo);
 
         if (teams.Count != 2)
+        {
+            _logger.LogWarning(
+                "Unable to start Match {MatchNo}. Expected 2 teams but found {Count}.",
+                matchNo,
+                teams.Count);
+
             return false;
+        }
 
         Team battingTeam;
         Team bowlingTeam;
 
-        // Decide Batting & Bowling Team
         if (match.tossDecision.Equals("Bat", StringComparison.OrdinalIgnoreCase))
         {
-            battingTeam = teams.FirstOrDefault(x => x.shortName == match.tossWinner)!;
-            bowlingTeam = teams.FirstOrDefault(x => x.shortName != match.tossWinner)!;
+            battingTeam = teams.First(x => x.shortName == match.tossWinner);
+            bowlingTeam = teams.First(x => x.shortName != match.tossWinner);
         }
         else
         {
-            bowlingTeam = teams.FirstOrDefault(x => x.shortName == match.tossWinner)!;
-            battingTeam = teams.FirstOrDefault(x => x.shortName != match.tossWinner)!;
+            bowlingTeam = teams.First(x => x.shortName == match.tossWinner);
+            battingTeam = teams.First(x => x.shortName != match.tossWinner);
         }
 
-        if (battingTeam == null || bowlingTeam == null)
-            return false;
+        _logger.LogInformation(
+            "Batting Team: {BattingTeam}, Bowling Team: {BowlingTeam}",
+            battingTeam.shortName,
+            bowlingTeam.shortName);
 
         // Get Players
         var battingPlayers = await _playerRepository.GetPlayersByTeamAsync(
@@ -476,52 +768,77 @@ public class LiveService : ILiveService
             matchNo);
 
         if (battingPlayers.Count < 2 || bowlingPlayers.Count < 1)
-            return false;
+        {
+            _logger.LogWarning(
+                "Insufficient players to start Match {MatchNo}.",
+                matchNo);
 
-        // Select Opening Batters
+            return false;
+        }
+
         var striker = battingPlayers[0];
         var nonStriker = battingPlayers[1];
 
-        // Select Opening Bowler (Bowler or All Rounder)
         var bowler = bowlingPlayers.FirstOrDefault(x =>
             x.role == "Bowler" ||
             x.role == "All Rounder");
 
         if (bowler == null)
+        {
+            _logger.LogWarning(
+                "No opening bowler available for Match {MatchNo}.",
+                matchNo);
+
             return false;
+        }
+
+        _logger.LogInformation(
+            "Opening Batters: {Striker} & {NonStriker}",
+            striker.name,
+            nonStriker.name);
+
+        _logger.LogInformation(
+            "Opening Bowler: {Bowler}",
+            bowler.name);
 
         // Update Match State
         match.currentBattingTeamIndex = battingTeam.TeamId;
         match.currentBowlingTeamIndex = bowlingTeam.TeamId;
-
         match.strikerPlayerId = striker.playerId;
         match.nonStrikerPlayerId = nonStriker.playerId;
-
         match.currentBowlerPlayerId = bowler.playerId;
-
         match.currentInnings = 1;
         match.status = "LIVE";
 
-        // Update Player Status
         striker.status = "Batting";
         nonStriker.status = "Batting";
 
-        // Save
         await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Match {MatchNo} started successfully.",
+            matchNo);
 
         return true;
     }
 
     public async Task<bool> ChangeBowlerAsync(ChangeBowlerDto dto)
     {
+        _logger.LogInformation(
+            "Changing bowler. MatchNo: {MatchNo}, NewBowlerId: {BowlerPlayerId}",
+            dto.MatchNo,
+            dto.BowlerPlayerId);
+
         var match = await _matchRepository.GetMatchByMatchNoAsync(dto.MatchNo);
 
         if (match == null)
         {
-            Console.WriteLine("Match is null");
+            _logger.LogWarning(
+                "Match not found. MatchNo: {MatchNo}",
+                dto.MatchNo);
+
             return false;
         }
-
 
         var bowlingTeam = await _teamRepository.GetTeamByIdAsync(
             match.currentBowlingTeamIndex!.Value,
@@ -529,9 +846,14 @@ public class LiveService : ILiveService
 
         if (bowlingTeam == null)
         {
-            Console.WriteLine("BowlingTeam is null");
+            _logger.LogWarning(
+                "Current bowling team not found. MatchNo: {MatchNo}, TeamId: {TeamId}",
+                match.matchNo,
+                match.currentBowlingTeamIndex);
+
             return false;
         }
+
         var bowler = await _playerRepository.GetPlayerByIdAsync(
             dto.BowlerPlayerId,
             bowlingTeam.TeamId,
@@ -539,20 +861,34 @@ public class LiveService : ILiveService
 
         if (bowler == null)
         {
-            Console.WriteLine("Bowler is null");
+            _logger.LogWarning(
+                "Bowler not found. MatchNo: {MatchNo}, TeamId: {TeamId}, PlayerId: {PlayerId}",
+                match.matchNo,
+                bowlingTeam.TeamId,
+                dto.BowlerPlayerId);
+
             return false;
         }
 
         if (bowler.role != "Bowler" &&
             bowler.role != "All-Rounder")
         {
-            Console.WriteLine("Bowlerand All Rounter is null");
+            _logger.LogWarning(
+                "Invalid bowler selection. Player '{PlayerName}' has role '{Role}'.",
+                bowler.name,
+                bowler.role);
+
             return false;
         }
 
         match.currentBowlerPlayerId = bowler.playerId;
 
         await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Bowler changed successfully. New Bowler: {BowlerName}, MatchNo: {MatchNo}",
+            bowler.name,
+            match.matchNo);
 
         return true;
     }
@@ -576,14 +912,13 @@ public class LiveService : ILiveService
                battingTeam.wickets >= 10 ||
                battingTeam.overs >= 20;
     }
-    private void FinishMatch(
+    private async Task FinishMatch(
      Match match,
      Team battingTeam,
      Team bowlingTeam)
     {
-        //match.status = "COMPLETED";
-
-        // Chasing team wins
+        battingTeam.totalMatch++;
+        bowlingTeam.totalMatch++;
         if (battingTeam.runs > bowlingTeam.runs)
         {
             int wicketsLeft = (int)(10 - battingTeam.wickets);
@@ -591,41 +926,102 @@ public class LiveService : ILiveService
             match.result =
                 $"{battingTeam.shortName} won by {wicketsLeft} wickets";
 
-            return;
+            battingTeam.winCount++;
+            bowlingTeam.lossCount++;
         }
-
-        // Defending team wins
-        if (battingTeam.runs < bowlingTeam.runs)
+        else if (battingTeam.runs < bowlingTeam.runs)
         {
             int runsMargin = (int)(bowlingTeam.runs - battingTeam.runs);
 
             match.result =
                 $"{bowlingTeam.shortName} won by {runsMargin} runs";
 
-            return;
+            bowlingTeam.winCount++;
+            battingTeam.lossCount++;
+            
+        }
+        else
+        {
+            match.result = "Match Tied";
         }
 
-        match.result = "Match Tied";
+        await UpdateUpcomingMatchesStatsAsync(battingTeam, bowlingTeam);
+    }
+    private async Task UpdateUpcomingMatchesStatsAsync(
+    Team liveBattingTeam,
+    Team liveBowlingTeam)
+    {
+        var upcomingMatches = await _matchRepository.GetUpcomingMatchesAsync();
+
+        foreach (var upcomingMatch in upcomingMatches)
+        {
+            var teams = await _teamRepository.GetTeamsByMatchNoAsync(upcomingMatch.matchNo);
+
+            foreach (var team in teams)
+            {
+                if (team.shortName == liveBattingTeam.shortName)
+                {
+                    team.winCount = liveBattingTeam.winCount;
+                    team.lossCount = liveBattingTeam.lossCount;
+                }
+
+                if (team.shortName == liveBowlingTeam.shortName)
+                {
+                    team.winCount = liveBowlingTeam.winCount;
+                    team.lossCount = liveBowlingTeam.lossCount;
+                }
+            }
+        }
+
+        // Save all updates only once
+        await _unitOfWork.SaveChangesAsync();
     }
     public async Task<bool> UpdatePlayerOfTheMatchAsync(
-    int matchNo,
-    PlayerOfTheMatchDto dto)
+     int matchNo,
+     PlayerOfTheMatchDto dto)
     {
+        _logger.LogInformation(
+            "Updating Player of the Match. MatchNo: {MatchNo}, PlayerId: {PlayerId}",
+            matchNo,
+            dto.PlayerId);
+
         var match = await _matchRepository.GetMatchByMatchNoAsync(matchNo);
 
         if (match == null)
+        {
+            _logger.LogWarning(
+                "Match not found. MatchNo: {MatchNo}",
+                matchNo);
+
             return false;
+        }
 
-        var player = await _playerRepository.GetPlayersByMatchNoAsync(matchNo);
+        var players = await _playerRepository.GetPlayersByMatchNoAsync(matchNo);
 
-        var selectedPlayer = player.FirstOrDefault(x => x.playerId == dto.PlayerId);
+        var selectedPlayer = players.FirstOrDefault(
+            x => x.playerId == dto.PlayerId);
 
         if (selectedPlayer == null)
+        {
+            _logger.LogWarning(
+                "Player not found. MatchNo: {MatchNo}, PlayerId: {PlayerId}",
+                matchNo,
+                dto.PlayerId);
+
             return false;
+        }
 
         match.playerOfTheMatch = selectedPlayer.name;
 
+        _logger.LogInformation(
+            "Player of the Match selected: {PlayerName}",
+            selectedPlayer.name);
+
         await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Player of the Match updated successfully for MatchNo: {MatchNo}",
+            matchNo);
 
         return true;
     }
@@ -768,28 +1164,78 @@ public class LiveService : ILiveService
     }
     public async Task<bool> PromoteUpcomingMatchAsync(int matchNo)
     {
+        _logger.LogInformation(
+            "Promoting upcoming match to LIVE. MatchNo: {MatchNo}",
+            matchNo);
+
         var match = await _matchRepository.GetMatchByMatchNoAsync(matchNo);
 
         if (match == null)
+        {
+            _logger.LogWarning(
+                "Unable to promote match. Match not found. MatchNo: {MatchNo}",
+                matchNo);
+
             return false;
+        }
 
         match.status = "LIVE";
 
+        _logger.LogInformation(
+            "Match status updated to LIVE. MatchNo: {MatchNo}",
+            matchNo);
+
+        MatchBallStore.FirstInningsBalls.TryRemove(matchNo, out _);
+        MatchBallStore.SecondInningsBalls.TryRemove(matchNo, out _);
+
+        _logger.LogInformation(
+            "Cleared ball history for MatchNo: {MatchNo}",
+            matchNo);
+
         await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Upcoming match promoted successfully. MatchNo: {MatchNo}",
+            matchNo);
 
         return true;
     }
     public async Task<List<MatchDto>> GetUpcomingMatchesAsync()
     {
+        _logger.LogInformation(
+            "Fetching upcoming matches.");
+
         var matches = await _matchRepository.GetUpcomingMatchesAsync();
+
+        if (matches.Count == 0)
+        {
+            _logger.LogWarning(
+                "No upcoming matches found.");
+
+            return new List<MatchDto>();
+        }
+
+        _logger.LogInformation(
+            "Retrieved {MatchCount} upcoming match(es).",
+            matches.Count);
 
         var result = new List<MatchDto>();
 
         foreach (var match in matches)
         {
+            _logger.LogInformation(
+                "Loading MatchNo: {MatchNo}",
+                match.matchNo);
+
             var teams = await _teamRepository.GetTeamsByMatchNoAsync(match.matchNo);
 
             var players = await _playerRepository.GetPlayersByMatchNoAsync(match.matchNo);
+
+            _logger.LogInformation(
+                "Retrieved {TeamCount} teams and {PlayerCount} players for MatchNo: {MatchNo}.",
+                teams.Count,
+                players.Count,
+                match.matchNo);
 
             var matchDto = _mapper.Map<MatchDto>(match);
 
@@ -800,26 +1246,38 @@ public class LiveService : ILiveService
                 teamDto.Players = _mapper.Map<List<PlayerDto>>(
                     players
                         .Where(p => p.TeamId == team.TeamId)
-                        .ToList()
-                );
+                        .ToList());
 
                 matchDto.Teams.Add(teamDto);
+
+                _logger.LogInformation(
+                    "Mapped Team {TeamName} with {PlayerCount} players.",
+                    team.shortName,
+                    teamDto.Players.Count);
             }
 
             matchDto.FirstInningsBalls =
                 MatchBallStore.FirstInningsBalls.GetValueOrDefault(
                     match.matchNo,
-                    new List<string>()
-                );
+                    new List<string>());
 
             matchDto.SecondInningsBalls =
                 MatchBallStore.SecondInningsBalls.GetValueOrDefault(
                     match.matchNo,
-                    new List<string>()
-                );
+                    new List<string>());
+
+            _logger.LogInformation(
+                "Loaded ball history for MatchNo: {MatchNo}. First Innings: {FirstCount}, Second Innings: {SecondCount}",
+                match.matchNo,
+                matchDto.FirstInningsBalls.Count,
+                matchDto.SecondInningsBalls.Count);
 
             result.Add(matchDto);
         }
+
+        _logger.LogInformation(
+            "Successfully prepared {MatchCount} upcoming match(es).",
+            result.Count);
 
         return result;
     }
