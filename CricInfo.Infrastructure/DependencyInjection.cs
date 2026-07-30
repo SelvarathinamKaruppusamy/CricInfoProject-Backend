@@ -30,6 +30,8 @@ public static class DependencyInjection
 
         // Completed Module
         services.AddScoped<ICompletedRepository, CompletedRepository>();
+        services.AddScoped<IBattingRepository, BattingRepository>();
+        services.AddScoped<IBowlingRepository, BowlingRepository>();
 
         // Services
         services.AddScoped<ILiveService, LiveService>();

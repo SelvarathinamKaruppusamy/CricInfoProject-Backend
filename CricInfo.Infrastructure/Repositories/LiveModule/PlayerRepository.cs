@@ -51,4 +51,12 @@ public class PlayerRepository : IPlayerRepository
             .OrderBy(x => x.playerId)
             .FirstOrDefaultAsync();
     }
+    public async Task DeletePlayersByMatchNoAsync(int matchNo)
+    {
+        var players = await _context.Players
+            .Where(x => x.matchNo == matchNo)
+            .ToListAsync();
+
+        _context.Players.RemoveRange(players);
+    }
 }

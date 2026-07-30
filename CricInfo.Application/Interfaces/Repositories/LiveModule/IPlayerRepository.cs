@@ -9,4 +9,5 @@ public interface IPlayerRepository
     Task<Player?> GetPlayerByIdAsync(int playerId, int teamId, int matchNo);
     Task UpdatePlayerAsync(Player player);
     Task<Player?> GetNextBatterAsync(int teamId, int matchNo);
+    Task DeletePlayersByMatchNoAsync(int matchNo);
 }

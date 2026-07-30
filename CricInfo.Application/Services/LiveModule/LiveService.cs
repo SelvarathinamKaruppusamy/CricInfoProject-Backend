@@ -2,6 +2,7 @@
 using CricInfo.API.Memory;
 using CricInfo.Application.DTOs.Live.RequestDto;
 using CricInfo.Application.DTOs.Live.ResponseDto;
+using CricInfo.Application.Interfaces.Repositories.CompletedModule;
 using CricInfo.Application.Interfaces.Repositories.LiveModule;
 using CricInfo.Application.Interfaces.Services.LiveModule;
 using CricInfo.Domain.Entities;
@@ -15,6 +16,8 @@ public class LiveService : ILiveService
     private readonly IPlayerRepository _playerRepository;
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBattingRepository _battingRepository;
+    private readonly IBowlingRepository _bowlingRepository;
 
 
 
@@ -23,13 +26,18 @@ public class LiveService : ILiveService
         ITeamRepository teamRepository,
         IPlayerRepository playerRepository,
         IMapper mapper,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IBattingRepository battingRepository,
+        IBowlingRepository  bowlingRepository
+        )
     {
         _matchRepository = matchRepository;
         _teamRepository = teamRepository;
         _playerRepository = playerRepository;
         _mapper = mapper;
         _unitOfWork = unitOfWork;
+        _battingRepository = battingRepository;
+        _bowlingRepository = bowlingRepository;
     }
 
     public async Task<MatchDto?> GetLiveMatchAsync()
@@ -716,15 +724,42 @@ public class LiveService : ILiveService
     }
     public async Task<bool> CompleteMatchAsync(CompletedMatchDto dto)
     {
+        // Get Match
         var match = await _matchRepository.GetMatchByMatchNoAsync(dto.MatchNo);
 
         if (match == null)
             return false;
 
-        // Update Player of the Match
-        match.playerOfTheMatch = dto.PlayerOfTheMatch;
+        // Get all players of the completed match
+        var players = await _playerRepository.GetPlayersByMatchNoAsync(dto.MatchNo);
 
-        // Mark current match as completed
+        if (!players.Any())
+            return false;
+
+        // Batting players
+        var battingList = _mapper.Map<List<Batting>>(players);
+
+        // Bowling players
+        var bowlingPlayers = players
+            .Where(p =>
+                p.role == "Bowler" ||
+                p.role == "All-Rounder")
+            .ToList();
+
+        // Convert Players -> Bowling
+        var bowlingList = _mapper.Map<List<Bowling>>(bowlingPlayers);
+
+        // Save into Batting table
+        await _battingRepository.AddRangeAsync(battingList);
+
+        // Save into Bowling table
+        await _bowlingRepository.AddRangeAsync(bowlingList);
+
+        // Remove players of this completed match
+        await _playerRepository.DeletePlayersByMatchNoAsync(dto.MatchNo);
+
+        // Update Match
+        match.playerOfTheMatch = dto.PlayerOfTheMatch;
         match.status = "COMPLETED";
 
         await _unitOfWork.SaveChangesAsync();

@@ -19,5 +19,12 @@ public class CompletedMappingProfile : Profile
         CreateMap<Bowling, BowlingResponseDto>()
             .ForMember(dest => dest.playerId,
                 opt => opt.MapFrom(src => src.PlayerId));
+
+        CreateMap<Player, Batting>()
+            .ForMember(dest => dest.id, opt => opt.Ignore());
+
+        CreateMap<Player, Bowling>()
+            .ForMember(dest => dest.id, opt => opt.Ignore());
     }
+    
 }
