@@ -10,13 +10,13 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
+      
+        
         // Repository
         services.AddScoped<IMatchRepository, MatchRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IPlayerRepository, PlayerRepository>();
-
         // Service
-        
         services.AddScoped<ILiveService, LiveService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

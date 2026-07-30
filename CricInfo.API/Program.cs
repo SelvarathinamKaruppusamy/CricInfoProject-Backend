@@ -1,13 +1,16 @@
+using CricInfo.API.Filters;
+using CricInfo.API.Middleware;
 using CricInfo.Application.Interfaces.Services.LiveModule;
 using CricInfo.Infrastructure;
 using CricInfo.Infrastructure.presistence;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddScoped<ActionLoggingFilter>();
+builder.Services.AddControllers(options=> { options.Filters.Add<ActionLoggingFilter>();});
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<CricDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultString")));
@@ -23,9 +26,12 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-var app = builder.Build();
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
 
-// Configure the HTTP request pipeline.
+builder.Host.UseSerilog();
+var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -33,6 +39,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AngularPolicy");
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseAuthorization();
 
