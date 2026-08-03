@@ -27,7 +27,7 @@ public class BlogRepository : IBlogRepository
         return await _context.Blogs
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.MatchNo == matchNo);
-    }
+    }    
 
     public async Task<Blog> AddAsync(Blog blog)
     {

@@ -13,4 +13,3 @@ public interface IMatchRepository
     Task<Match?> GetCurrentLiveMatchAsync();
 
 }
-
