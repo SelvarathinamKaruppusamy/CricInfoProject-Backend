@@ -57,7 +57,6 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-var app = builder.Build();
 // ----------------------
 // Points Table Services
 // ----------------------

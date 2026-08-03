@@ -18,7 +18,6 @@ using CricInfo.Infrastructure.Repositories.CompletedModule;
 using CricInfo.Infrastructure.Repositories.LiveModule;
 using CricInfo.Infrastructure.Repositories.UpcomingModule;
 using Microsoft.Extensions.DependencyInjection;
-using LiveMatchRepository = CricInfo.Infrastructure.Repositories.LiveModule.MatchRepository;
 
 
 namespace CricInfo.Infrastructure;
@@ -27,10 +26,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        // Live Module
-        services.AddScoped<
-            CricInfo.Application.Interfaces.Repositories.LiveModule.IMatchRepository,
-            LiveMatchRepository>();
 
       
         
