@@ -1,5 +1,6 @@
 ﻿using CricInfo.Application.DTOs.Upcoming;
 using CricInfo.Application.Interfaces.Services.Upcoming;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualBasic;
 
@@ -34,7 +35,7 @@ namespace CricInfo.API.Controllers.UpcomingModule
 
             return Ok(result);
         }
-
+        [Authorize]
         [HttpPut("{matchNo}")]
         public async Task<IActionResult> UpdateMatch(int matchNo,[FromBody] UpdateMatchDTO dto)
         {

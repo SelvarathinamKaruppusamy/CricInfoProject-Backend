@@ -2,6 +2,7 @@
 using CricInfo.Application.Interfaces.Services.AdminLogin;
 using CricInfo.Application.Services.AdminLoginModule;
 using CricInfo.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -50,6 +51,7 @@ public class AuthController : ControllerBase
                     "Password Updated Successfully"
             });
     }
+    [Authorize]
     [HttpGet("profile/{username}")]
     public async Task<IActionResult>
          GetProfile(
@@ -66,6 +68,7 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
+    [Authorize]
     [HttpPut("profile/{id}")]
     public async Task<IActionResult> UpdateProfile(
         int id,
@@ -86,6 +89,7 @@ public class AuthController : ControllerBase
             message = "Profile Updated Successfully"
         });
     }
+    [Authorize]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {

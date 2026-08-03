@@ -1,4 +1,5 @@
 ﻿using CricInfo.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -23,7 +24,7 @@ public class QuizController : ControllerBase
             await _service
                 .GetQuestionsAsync());
     }
-
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult>
         SubmitQuiz(
@@ -74,7 +75,7 @@ public class QuizController : ControllerBase
 
         return Ok(question);
     }
-
+    [Authorize]
     [HttpPost("add")]
     public async Task<IActionResult>
  AddQuestion(
@@ -85,7 +86,7 @@ public class QuizController : ControllerBase
 
         return Ok(question);
     }
-
+    [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult>
         UpdateQuestion(
@@ -100,7 +101,7 @@ public class QuizController : ControllerBase
         return Ok(
             "Question updated successfully.");
     }
-
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult>
         DeleteQuestion(

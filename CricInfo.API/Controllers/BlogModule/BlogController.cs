@@ -1,5 +1,6 @@
 ﻿using CricInfo.Application.DTOs.Blog;
 using CricInfo.Application.Interfaces.Services.BlogModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CricInfo.API.Controllers.BlogModule;
@@ -33,6 +34,7 @@ public async Task<IActionResult> GetByMatchNo(int matchNo)
     return Ok(blog);
 }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Create(CreateBlogDto dto)
     {
@@ -44,6 +46,7 @@ public async Task<IActionResult> GetByMatchNo(int matchNo)
             blog);
     }
 
+    [Authorize]
     [HttpPut("{matchNo:int}")]
     public async Task<IActionResult> Update(int matchNo, UpdateBlogDto dto)
     {
@@ -55,6 +58,7 @@ public async Task<IActionResult> GetByMatchNo(int matchNo)
         return Ok(blog);
     }
 
+    [Authorize]
     [HttpDelete("{matchNo:int}")]
     public async Task<IActionResult> Delete(int matchNo)
     {

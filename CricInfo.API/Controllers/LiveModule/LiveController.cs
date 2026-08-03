@@ -1,22 +1,18 @@
-﻿using CricInfo.Application.DTOs.Live.RequestDto;
+﻿using CricInfo.API.Filters;
+using CricInfo.Application.DTOs.Live.RequestDto;
 using CricInfo.Application.DTOs.Live.ResponseDto;
 using CricInfo.Application.Interfaces.Services.LiveModule;
 using CricInfo.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CricInfo.API.Controllers.LiveModule;
 
 [ApiController]
 [Route("api/[controller]")]
-public class LiveController : ControllerBase
+public class LiveController(ILiveService _liveService) : ControllerBase
 {
-    private readonly ILiveService _liveService;
-
-    public LiveController(ILiveService liveService)
-    {
-        _liveService = liveService;
-    }
-
+    // This Action Method is used to access the Live Match in the Database
     [HttpGet]
     public async Task<IActionResult> GetLiveMatch()
     {
@@ -28,23 +24,13 @@ public class LiveController : ControllerBase
         return Ok(data);
     }
 
-    [HttpGet("team/{teamId}/{matchNo}")]
-    public async Task<ActionResult<Team>> GetTeam(int teamId, int matchNo)
-    {
-        var team = await _liveService.GetLiveTeamAsync(teamId, matchNo);
-        if (team == null) return NotFound();
-        return Ok(team);
-    }
-    [HttpGet("{playerId}/{teamId}/{matchNo}")]
-    public async Task<ActionResult<Player>> GetPlayer(int playerId, int teamId, int matchNo)
-    {
-        var Player = await _liveService.GetLivePlayerAsync(playerId, teamId, matchNo);
-        if (Player == null) return NotFound();
-        return Ok(Player);
-    }
 
+
+    // This Action Method is used to Update the specific Match data in the Database using (primary keys - matchNo)
+    [Authorize]
     [HttpPut("Match/{matchNo}")]
-    public async Task<ActionResult<string>> UpdateLiveMatch(int matchNo, [FromBody] MatchUpdateDto matchUpdateDto) {
+    public async Task<ActionResult<string>> UpdateLiveMatch(int matchNo, [FromBody] MatchUpdateDto matchUpdateDto)
+    {
         if (matchUpdateDto == null) return "The data is empty from the body";
         await _liveService.UpdateMatchAsync(matchNo, matchUpdateDto);
         return Ok(new
@@ -52,20 +38,10 @@ public class LiveController : ControllerBase
             message = "Successful match updated"
         });
     }
-    [HttpPut("Team/{teamId}/{matchNo}")]
-    public async Task<string> UpdateLiveTeam(int teamId,int matchNo, [FromBody] TeamUpdateDto teamUpdateDto)
-    {
-        if(teamUpdateDto == null) return "The data is empty from the body";
-        await _liveService.UpdateTeamAsync(teamId, matchNo, teamUpdateDto);
-        return "Successfull Team updated";
-    }
-    [HttpPut("Player/{playerId}/{teamId}/{matchNo}")]
-    public async Task<string> UpdateLivePlayer(int playerId,int teamId,int matchNo, [FromBody] PlayerUpdateDto playerUpdateDto)
-    {
-        if(playerUpdateDto == null) return "The data is empty from the body";
-        await _liveService.UpdatePlayerAsync(playerId,teamId, matchNo, playerUpdateDto);
-        return "Successfull Player updated";
-    }
+
+
+    // This Action Method is used to Update the every ball from the frontend admin panel to match ,teams,players data 
+    [Authorize]
     [HttpPost("ball")]
     public async Task<IActionResult> ProcessBall(
      [FromBody] BallUpdateDto dto)
@@ -85,6 +61,10 @@ public class LiveController : ControllerBase
             message = "Ball Updated Successfully"
         });
     }
+
+
+    // This Action Method is used to Update the toss data for specific Match data in the Database 
+    [Authorize]
     [HttpPut("toss")]
     public async Task<IActionResult> UpdateToss([FromBody] TossDto dto)
     {
@@ -95,6 +75,10 @@ public class LiveController : ControllerBase
 
         return Ok("Toss Updated Successfully");
     }
+
+
+    // This Action Method is used to Update the specific Match data like current Innings and toss winner and batting teams striker and non striker and current bowler in the Database
+    [Authorize]
     [HttpPost("start-match/{matchNo}")]
     public async Task<IActionResult> StartMatch(int matchNo)
     {
@@ -110,6 +94,9 @@ public class LiveController : ControllerBase
         });
     }
 
+
+    // This Action Method is used to Update the every over new bowler in the Database
+    [Authorize]
     [HttpPut("change-bowler")]
     public async Task<ActionResult<string>> ChangeBowler(ChangeBowlerDto dto)
     {
@@ -123,6 +110,10 @@ public class LiveController : ControllerBase
             message = "Successful bowler changed"
         });
     }
+
+
+    // This Action Method is used to Update the specific Match data after completed the live for player of the match data for completed match in the Database 
+    [Authorize]
     [HttpPut("{matchNo}/player-of-the-match")]
     public async Task<ActionResult<string>> UpdatePlayerOfTheMatch(
     int matchNo,
@@ -138,6 +129,10 @@ public class LiveController : ControllerBase
             message = "Successful Player Of the Match Updated"
         });
     }
+
+
+    // This Action Method is used to Update the specific Match data for secondInnings in the Database 
+    [Authorize]
     [HttpPost("start-second-innings/{matchNo}")]
     public async Task<IActionResult> StartSecondInnings(int matchNo)
     {
@@ -148,6 +143,10 @@ public class LiveController : ControllerBase
 
         return Ok("Second Innings Started Successfully");
     }
+
+
+    // This Action Method is used to Update the Live Match data to Completed Match status in the Database
+    [Authorize]
     [HttpPut("complete-match")]
     public async Task<IActionResult> CompleteMatch([FromBody] CompletedMatchDto dto)
     {
@@ -161,6 +160,10 @@ public class LiveController : ControllerBase
             message = "Match Completed Successfully"
         });
     }
+
+
+    // This Action Method is used to Update the next upcoming Match data  to Live match in the Database using (primary keys - matchNo)
+    [Authorize]
     [HttpPost("promote/{matchNo}")]
     public async Task<IActionResult> PromoteUpcomingMatch(int matchNo)
     {
@@ -175,6 +178,10 @@ public class LiveController : ControllerBase
             message = "Match promoted successfully."
         });
     }
+
+
+    // This Action Method is used to get the next upcoming Match data
+
     [HttpGet("upcoming")]
     public async Task<IActionResult> GetUpcomingMatches()
     {
