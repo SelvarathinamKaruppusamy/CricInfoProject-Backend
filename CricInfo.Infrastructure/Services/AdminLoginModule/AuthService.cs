@@ -32,48 +32,79 @@ public class AuthService : IAuthService
         _emailService = emailService;
     }
 
-    public async Task<LoginResponseDto?> Login(LoginDto dto)
+    public async Task<LoginResponseDto> Login(LoginDto dto)
     {
         var watch = System.Diagnostics.Stopwatch.StartNew();
 
         var user = await _context.Admins
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                x => x.UserName == dto.UserName);
+            .FirstOrDefaultAsync(x => x.UserName == dto.UserName);
 
-        Console.WriteLine(
-            $"DB : {watch.ElapsedMilliseconds}");
+        Console.WriteLine($"DB : {watch.ElapsedMilliseconds}");
 
         if (user == null)
-            return null;
+        {
+            return new LoginResponseDto
+            {
+                Success = false,
+                Message = "Invalid username or password."
+            };
+        }
 
-        bool valid =
-            BCrypt.Net.BCrypt.Verify(
-                dto.Password,
-                user.PasswordHash);
+        if (user.IsLoggedIn)
+        {
+            return new LoginResponseDto
+            {
+                Success = false,
+                Message = "You are already signed in on another device."
+            };
+        }
 
-        Console.WriteLine(
-            $"BCrypt : {watch.ElapsedMilliseconds}");
+        bool valid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+
+        Console.WriteLine($"BCrypt : {watch.ElapsedMilliseconds}");
 
         if (!valid)
-            return null;
-
-        var result = new LoginResponseDto
         {
+            return new LoginResponseDto
+            {
+                Success = false,
+                Message = "Invalid username or password."
+            };
+        }
+
+        user.IsLoggedIn = true;
+
+        await _context.SaveChangesAsync();
+
+        Console.WriteLine($"TOTAL : {watch.ElapsedMilliseconds}");
+
+        return new LoginResponseDto
+        {
+            Success = true,
+            Message = "Login successful.",
+
             Token = GenerateToken(user),
             UserName = user.UserName,
             Role = user.Role,
             FirstLogin = user.FirstLogin,
             FirstName = user.FirstName,
-            LastName = user.LastName,
+            LastName = user.LastName
         };
-
-        Console.WriteLine(
-            $"TOTAL : {watch.ElapsedMilliseconds}");
-
-        return result;
     }
+    public async Task<bool> Logout(string username)
+    {
+        var user = await _context.Admins
+            .FirstOrDefaultAsync(x => x.UserName == username);
 
+        if (user == null)
+            return false;
+
+        user.IsLoggedIn = false;
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
     private string GenerateToken(Admin user)
     {
         var claims = new[]

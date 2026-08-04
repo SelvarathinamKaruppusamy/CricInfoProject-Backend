@@ -23,4 +23,5 @@
     public DateTime Dob { get; set; }
 
     public bool FirstLogin { get; set; }
+    public bool IsLoggedIn { get; set; } = false;
 }

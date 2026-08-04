@@ -5,7 +5,7 @@ namespace CricInfo.Application.Interfaces.Services.AdminLogin;
 public interface IAuthService
 {
     Task<LoginResponseDto?> Login(LoginDto dto);
-
+    Task<bool> Logout(string username);
     Task<bool> ResetPassword(
         ResetPasswordDto dto);
 

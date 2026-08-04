@@ -21,12 +21,26 @@ public class AuthController : ControllerBase
     {
         var result = await _service.Login(dto);
 
-        if (result == null)
-            return Unauthorized();
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
 
         return Ok(result);
     }
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
 
+        var username = User.Identity?.Name;
+
+        Console.WriteLine(username);
+
+        var result = await _service.Logout(username!);
+
+        return Ok();
+    }
     [HttpPost("reset-password")]
     public async Task<IActionResult>
         ResetPassword(ResetPasswordDto dto)
