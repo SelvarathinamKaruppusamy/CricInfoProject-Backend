@@ -63,7 +63,9 @@ public class AuthService : IAuthService
             Token = GenerateToken(user),
             UserName = user.UserName,
             Role = user.Role,
-            FirstLogin = user.FirstLogin
+            FirstLogin = user.FirstLogin,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
         };
 
         Console.WriteLine(
