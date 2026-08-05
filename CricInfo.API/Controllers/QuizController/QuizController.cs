@@ -24,7 +24,6 @@ public class QuizController : ControllerBase
             await _service
                 .GetQuestionsAsync());
     }
-    [Authorize]
     [HttpPost]
     public async Task<IActionResult>
         SubmitQuiz(

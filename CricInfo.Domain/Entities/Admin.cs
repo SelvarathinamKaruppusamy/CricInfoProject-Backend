@@ -24,4 +24,5 @@
 
     public bool FirstLogin { get; set; }
     public bool IsLoggedIn { get; set; } = false;
+    public DateTime? TokenExpiry { get; set; }
 }

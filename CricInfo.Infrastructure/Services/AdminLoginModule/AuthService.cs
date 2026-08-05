@@ -22,6 +22,9 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly EmailService _emailService;
 
+    // Keep this in sync with the expiry used in GenerateToken
+    private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(5);
+
     public AuthService(
         CricDbContext context,
         IConfiguration configuration,
@@ -34,12 +37,8 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto> Login(LoginDto dto)
     {
-        var watch = System.Diagnostics.Stopwatch.StartNew();
-
         var user = await _context.Admins
             .FirstOrDefaultAsync(x => x.UserName == dto.UserName);
-
-        Console.WriteLine($"DB : {watch.ElapsedMilliseconds}");
 
         if (user == null)
         {
@@ -52,16 +51,22 @@ public class AuthService : IAuthService
 
         if (user.IsLoggedIn)
         {
-            return new LoginResponseDto
+            // If the last issued token has already expired, the "logged in" flag
+            // is stale (e.g. the browser was closed before it could call /logout).
+            // Treat that as not logged in instead of permanently locking the account.
+            bool sessionExpired = user.TokenExpiry.HasValue && user.TokenExpiry < DateTime.Now;
+
+            if (!sessionExpired)
             {
-                Success = false,
-                Message = "You are already signed in on another device."
-            };
+                return new LoginResponseDto
+                {
+                    Success = false,
+                    Message = "You are already signed in on another device."
+                };
+            }
         }
 
         bool valid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-
-        Console.WriteLine($"BCrypt : {watch.ElapsedMilliseconds}");
 
         if (!valid)
         {
@@ -73,10 +78,9 @@ public class AuthService : IAuthService
         }
 
         user.IsLoggedIn = true;
+        user.TokenExpiry = DateTime.Now.Add(TokenLifetime);
 
         await _context.SaveChangesAsync();
-
-        Console.WriteLine($"TOTAL : {watch.ElapsedMilliseconds}");
 
         return new LoginResponseDto
         {
@@ -91,6 +95,7 @@ public class AuthService : IAuthService
             LastName = user.LastName
         };
     }
+
     public async Task<bool> Logout(string username)
     {
         var user = await _context.Admins
@@ -100,51 +105,47 @@ public class AuthService : IAuthService
             return false;
 
         user.IsLoggedIn = false;
+        user.TokenExpiry = null;
 
         await _context.SaveChangesAsync();
 
         return true;
     }
+
     private string GenerateToken(Admin user)
     {
         var claims = new[]
         {
-        new Claim(ClaimTypes.Name, user.UserName),
-        new Claim(ClaimTypes.Role, user.Role)
-    };
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(ClaimTypes.Role, user.Role)
+        };
 
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
 
         var credentials = new SigningCredentials(
-            key, SecurityAlgorithms.HmacSha256);
+            key,
+            SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
             claims: claims,
-            expires: DateTime.Now.AddHours(8),
+            expires: DateTime.Now.Add(TokenLifetime),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-    public async Task<bool>
-ResetPassword(
-    ResetPasswordDto dto)
+
+    public async Task<bool> ResetPassword(ResetPasswordDto dto)
     {
-        var user =
-            await _context.Admins
-            .FirstOrDefaultAsync(
-                x => x.UserName ==
-                dto.UserName);
+        var user = await _context.Admins
+            .FirstOrDefaultAsync(x => x.UserName == dto.UserName);
 
         if (user == null)
         {
             return false;
         }
 
-        bool valid =
-            BCrypt.Net.BCrypt.Verify(
-                dto.CurrentPassword,
-                user.PasswordHash);
+        bool valid = BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash);
 
         if (!valid)
         {
@@ -156,24 +157,18 @@ ResetPassword(
             return false;
         }
 
-        user.PasswordHash =
-            BCrypt.Net.BCrypt.HashPassword(
-                dto.NewPassword);
-
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
         user.FirstLogin = false;
 
         await _context.SaveChangesAsync();
 
         return true;
     }
-    public async Task<ProfileDto?>
-    GetProfile(
-    string username)
+
+    public async Task<ProfileDto?> GetProfile(string username)
     {
-        var user =
-            await _context.Admins
-            .FirstOrDefaultAsync(
-                x => x.UserName == username);
+        var user = await _context.Admins
+            .FirstOrDefaultAsync(x => x.UserName == username);
 
         if (user == null)
         {
@@ -183,27 +178,18 @@ ResetPassword(
         return new ProfileDto
         {
             Id = user.Id,
-
             FirstName = user.FirstName,
-
             LastName = user.LastName,
-
             Email = user.Email,
-
             MobileNo = user.MobileNo,
-
             Gender = user.Gender,
-
             Dob = user.Dob,
-
             Address = user.Address,
-
             Role = user.Role
         };
     }
-    public async Task<bool> UpdateProfile(
-      int id,
-      ProfileDto dto)
+
+    public async Task<bool> UpdateProfile(int id, ProfileDto dto)
     {
         var user = await _context.Admins
             .FirstOrDefaultAsync(x => x.Id == id);
@@ -225,6 +211,7 @@ ResetPassword(
 
         return true;
     }
+
     public async Task<bool> Register(RegisterDto dto)
     {
         try
@@ -257,21 +244,17 @@ ResetPassword(
 
             await _context.SaveChangesAsync();
 
-            // Send Mail
             try
             {
                 await _emailService.SendMail(
                     dto.Email,
                     dto.UserName,
                     dto.Password);
-
-                Console.WriteLine("MAIL SENT");
             }
             catch (Exception ex)
             {
                 Console.WriteLine("MAIL FAILED");
                 Console.WriteLine(ex.Message);
-
                 // Don't fail registration if mail fails
             }
 

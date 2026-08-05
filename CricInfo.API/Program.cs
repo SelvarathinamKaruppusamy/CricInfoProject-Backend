@@ -90,7 +90,10 @@ builder.Services
             {
                 ValidateIssuer = false,
                 ValidateAudience = false,
+
                 ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,   // Add this
+
                 ValidateIssuerSigningKey = true,
 
                 IssuerSigningKey =

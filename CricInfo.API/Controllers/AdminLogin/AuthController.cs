@@ -28,19 +28,20 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
-    [Authorize]
+
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout([FromBody] LogoutDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.UserName))
+        {
+            return Ok(); // nothing to do, don't error the client out
+        }
 
-        var username = User.Identity?.Name;
-
-        Console.WriteLine(username);
-
-        var result = await _service.Logout(username!);
+        var result = await _service.Logout(dto.UserName);
 
         return Ok();
     }
+
     [HttpPost("reset-password")]
     public async Task<IActionResult>
         ResetPassword(ResetPasswordDto dto)
